@@ -1,4 +1,4 @@
-package test;
+package com.adsdk.sdk;
 
 import com.adsdk.sdk.networking.JSONRetriever;
 
@@ -20,6 +20,17 @@ public class DummyJSONRetriever implements JSONRetriever{
     @Override
     public void retrieve(String url, Listener listener) {
 
+        this.lastURL = url;
+
+        try {
+            JSONObject obj = new JSONObject(json);
+            listener.onFinish(null,obj);
+        } catch (JSONException e) {
+            listener.onFinish(e,null);
+        }
+    }
+
+    public void post(String url,JSONObject data,Listener listener){
         this.lastURL = url;
 
         try {

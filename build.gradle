@@ -28,10 +28,10 @@ bintray {
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/mobfox/MobFox-Android-SDK.git'
         version {
-                name = '7.0.1'
-                desc = 'MobFox Android SDK 7.0.1'
+                name = '7.0.8'
+                desc = 'MobFox Android SDK 7.0.8'
                 released  = new Date()
-                vcsTag = 'v7.0.1'
+                vcsTag = 'v7.0.8'
 //                attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
         }
         filesSpec {
@@ -54,37 +54,80 @@ android {
         abortOnError false
     }
 
-    sourceSets {
-        main {
-            java {
-                srcDir 'src/java'
-            }
-
-            resources {apply plugin: 'maven'
-                srcDir 'src/resources'
-            }
-        }
-
-    }
-
     targetCompatibility = 1.6
 
     dependencies {
+        compile('org.simpleframework:simple-xml:2.7.1') {
+            exclude group: 'stax', module: 'stax-api'
+            exclude group: 'xpp3', module: 'xpp3'
+        }
+        //compile 'com.google.android:support-v4:r7'
         compile 'com.google.android.gms:play-services:7.0.0'
-        compile fileTree(dir: 'libs', include: ['*.jar'])
+        //compile fileTree(dir: 'libs', include: ['*.jar'])
         compile fileTree(dir: 'partner_sdks', include: ['*.jar'])
+        testCompile fileTree(dir: 'testLibs', include: ['*.jar'])
+        testCompile 'junit:junit:4.12'
 
     }
+}
 
+android.libraryVariants.all { variant ->
+    variant.outputs.each { output ->
+        def packageLib = output.getPackageLibrary()
+        packageLib.exclude('libs/*.jar')
+    }
 }
 
 group = 'com.adsdk.sdk'
-version = "7.0.1"
+version = "7.0.8"
 
+/*
 configurations {
     localArchives
 }
+*/
 
+task clearJar(type: Delete) {
+    delete 'build/outputs/MobFox-Android-SDK.jar'
+}
+
+task makeSourcesJar(type: Jar) {
+    baseName = "MobFox-Android-SDK"
+    classifier = "sources"
+    destinationDir = new File('build/outputs/')
+    from('src/main/java/')
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/java'
+        }
+        resources {
+            srcDir 'src/resources'
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    classifier 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+task makeJar(type: Copy) {
+    from('build/intermediates/bundles/release/')
+    into('build/outputs/')
+    include('classes.jar')
+    rename('classes.jar', 'MobFox-Android-SDK-'+version+'.jar')
+}
+
+makeJar.dependsOn(clearJar, build)
+
+/*
 uploadLocalArchives {
     repositories {
         mavenDeployer {
@@ -92,27 +135,23 @@ uploadLocalArchives {
         }
     }
 }
+*/
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "file://localhost/Users/nabriski/projects/MobFox-Android-SDK/.mvnRepo")
+        }
+    }
+}
 
+
+
+/*
 artifacts{
-    localArchives file: file('build/outputs/MobFox-Android-SDK.jar')
+    localArchives file: file('build/outputs/MobFox-Android-SDK-'+version+'.jar'),makeSourcesJar
 }
+*/
 
-task unitTest(type: Exec, dependsOn: assemble) {
-    description = "run unit tests"
-    commandLine './unittests.sh'
-}
-
-build.dependsOn unitTest
-task clearJar(type: Delete) {
-    delete 'build/outputs/MobFox-Android-SDK.jar'
-}
-task makeJar(type: Copy) {
-    from('build/intermediates/bundles/release/')
-    into('build/outputs/')
-    include('classes.jar')
-    rename('classes.jar', 'MobFox-Android-SDK.jar')
-}
-makeJar.dependsOn(clearJar, build)
-defaultTasks 'makeJar'
+defaultTasks 'makeJar','makeSourceJar'
 dependencies {
 }

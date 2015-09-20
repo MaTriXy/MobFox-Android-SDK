@@ -7,6 +7,7 @@ import com.adsdk.sdk.AdListener;
 import com.adsdk.sdk.AdManager;
 
 import com.adsdk.sdk.Log;
+import com.adsdk.sdk.dmp.DMP;
 import com.adsdk.sdk.nativeformats.NativeFormatInterstitial;
 import com.adsdk.sdk.nativeformats.NativeFormatView;
 
@@ -34,6 +35,10 @@ public class Interstitial {
 
         this.publicationId = publicationId;
         this.ctx = ctx;
+
+        DMP dmp = DMP.getInstance(this.ctx);
+        dmp.update(ctx);
+
         WaterfallManager manager = WaterfallManager.getInstance(publicationId);
 
         bannerMgr = new AdManager(this.ctx, "http://my.mobfox.com/request.php",this.publicationId, true);
@@ -62,7 +67,7 @@ public class Interstitial {
                 }
 
                 _this.bannerMgr.showAd();
-                if(_this.listener==null) return;
+                if(_this.listener == null) return;
                 _this.listener.onAdLoaded();
             }
 
@@ -183,20 +188,18 @@ public class Interstitial {
 
         Log.d("waterfall load native format ad");
         final Interstitial _this = this;
-        final NativeFormatInterstitial ni = null; //new NativeFormatInterstitial(this.ctx,this.publicationId);
+        final NativeFormatInterstitial ni = new NativeFormatInterstitial(this.ctx,this.publicationId);
 
         ni.setListener(new NativeFormatView.NativeFormatAdListener(){
 
             @Override
             public void onNativeFormatLoaded(String html) {
-                android.util.Log.d("water","native loaded !!!");
                 if(_this.listener==null) return;
                 _this.listener.onAdLoaded();
             }
 
             @Override
             public void onNativeFormatFailed(Exception e) {
-                Log.d("waterfall load native format failed",e);
                 _this.loadAdInternal();
             }
 
@@ -207,12 +210,6 @@ public class Interstitial {
         });
 
         ni.loadAd();
-
     }
-
-    public void setWaterfallInterstitialListener(Listener listener){
-        this.listener = listener;
-    }
-
 
 }
